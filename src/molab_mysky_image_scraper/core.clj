@@ -3,8 +3,8 @@
     [clj-http.client :as client]
     [clj-time.core :as time]
     [clj-time.format :as time-format]
-    [semantic-csv.core :as sc :refer :all])
-  (:use debux.core)
+    [semantic-csv.core :as sc :refer :all]
+    [clojure.tools.logging :as log])
   (:gen-class))
 
 
@@ -25,23 +25,29 @@
 (defn post-image
     "Posts image and meta-data to the RESTful server"
     [url bytestream lat lon]
-    (client/post
-        url
-        {:multipart [
-            {:name "dt" :content (str (time/now))}
-            {:name "deviceId" :content "image-scraper"}
-            {:name "latitude" :content lat}
-            {:name "longitude" :content lon}
-            {:name "image" :content bytestream}
-            ]
-            :headers {"x-api-key" (System/getenv "API_KEY")}
-        }
-        )
+    (try
+        (client/post
+            url
+            {:multipart [
+                {:name "dt" :content (str (time/now))}
+                {:name "deviceId" :content "image-scraper"}
+                {:name "latitude" :content lat}
+                {:name "longitude" :content lon}
+                {:name "image" :content bytestream}
+                ]
+                :headers {"x-api-key" (System/getenv "API_KEY")}
+            }
+            )
+        (log/info "Post successfull")
+    (catch Exception e
+        (log/error e "Post failed with:"))
     )
+)
 
 (defn scrape-webcam
     "Scrapes a webcam image and posts to the DB"
     [webcam RESTserver]
+    (log/info "Scraping " (:url webcam))
     (let [image (blurp (:url webcam))]
       (post-image RESTserver image (:lat webcam) (:lon webcam))
       )
