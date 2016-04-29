@@ -46,10 +46,10 @@
 
 (defn scrape-webcam
     "Scrapes a webcam image and posts to the DB"
-    [webcam RESTserver]
+    [webcam]
     (log/info "Scraping " (:url webcam))
     (let [image (blurp (:url webcam))]
-      (post-image RESTserver image (:lat webcam) (:lon webcam))
+      (post-image (System/getenv "POST_URL") image (:lat webcam) (:lon webcam))
       )
     )
 
@@ -60,13 +60,13 @@
 
 (defn scrape-webcams
     "Loops over the webcams scraping them to the database"
-    ([webcams RESTserver]
-        (scrape-webcams (first webcams) (rest webcams) RESTserver))
-    ([webcam webcams RESTserver]
-        (scrape-webcam webcam RESTserver)
+    ([webcams]
+        (scrape-webcams (first webcams) (rest webcams)))
+    ([webcam webcams]
+        (scrape-webcam webcam)
         (if (empty? webcams)
             :default
-            (recur (first webcams) (rest webcams) RESTserver)
+            (recur (first webcams) (rest webcams))
             )
         )
     )
@@ -74,6 +74,6 @@
 (defn -main
   "Takes a list of urls from webcams.csv, and uploads the images (with the location) to the DynamoDB
   RESTserver is the url of the restful server"
-  [RESTserver & args]
-  (scrape-webcams (get-webcams) RESTserver)
+  [& args]
+  (scrape-webcams (get-webcams))
   )
