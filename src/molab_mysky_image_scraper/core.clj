@@ -4,32 +4,35 @@
     [clj-time.core :as time]
     [clj-time.format :as time-format]
     [semantic-csv.core :as sc :refer :all])
+  (:use debux.core)
   (:gen-class))
 
 
-(defn blurp [url]
+(defn blurp
     "Gets a bytestream from a URL object (such as an image)"
-  (let [ba (java.io.ByteArrayOutputStream.)]
-    (with-open [src (io/input-stream url)]
-      (io/copy src ba))
-    (.toByteArray ba)))
+    [url]
+    (let [ba (java.io.ByteArrayOutputStream.)]
+        (with-open [src (io/input-stream url)]
+          (io/copy src ba))
+        (.toByteArray ba)))
 
-(defn blit [bytestream file]
+(defn blit
     "Dumps a bystestream to a file"
-   (with-open [w (java.io.BufferedOutputStream. (java.io.FileOutputStream. file))]
-     (.write w bytestream)))
+    [bytestream file]
+    (with-open [w (java.io.BufferedOutputStream. (java.io.FileOutputStream. file))]
+       (.write w bytestream)))
 
 (defn post-image
     "Posts image and meta-data to the RESTful server"
-    [file latitude longitude url]
+    [url bytestream lat lon]
     (client/post
-        "https://iptd1v6we4.execute-api.eu-west-1.amazonaws.com/dev/image"
+        url
         {:multipart [
-            {:name "dt" :content ((time-format/formatters :basic-date-time) (time/now))}
+            {:name "dt" :content (str (time/now))}
             {:name "deviceId" :content "image-scraper"}
-            {:name "latitude" :content latitude}
-            {:name "longitude" :content longitude}
-            {:name "image" :content (clojure.java.io/file file)}
+            {:name "latitude" :content lat}
+            {:name "longitude" :content lon}
+            {:name "image" :content bytestream}
             ]
             :headers {"x-api-key" (System/getenv "API_KEY")}
         }
@@ -38,26 +41,33 @@
 
 (defn scrape-webcam
     "Scrapes a webcam image and posts to the DB"
-    [webcam]
+    [webcam RESTserver]
     (let [image (blurp (:url webcam))]
-      (post-image image (:latitude webcam :longitude webcam))
+      (post-image RESTserver image (:lat webcam) (:lon webcam))
       )
     )
 
-(defn get-webcams []
+(defn get-webcams
     "Loads list of webcams from our config file"
-    (sc/slurp-csv "webcams.csv"))
+    []
+    (sc/slurp-csv "./resources/webcams.csv"))
 
 (defn scrape-webcams
     "Loops over the webcams scraping them to the database"
-    ([webcams]
-        (recur (first webcams) (rest webcams)))
-    ([webcam webcams]
-        (scrape-webcam webcam)
+    ([webcams RESTserver]
+        (scrape-webcams (first webcams) (rest webcams) RESTserver))
+    ([webcam webcams RESTserver]
+        (scrape-webcam webcam RESTserver)
+        (if (empty? webcams)
+            :default
+            (recur (first webcams) (rest webcams) RESTserver)
+            )
+        )
     )
-)
 
 (defn -main
-  "I don't do a whole lot ... yet."
-  [& args]
-  () (println "Hello, World!"))
+  "Takes a list of urls from webcams.csv, and uploads the images (with the location) to the DynamoDB
+  RESTserver is the url of the restful server"
+  [RESTserver & args]
+  (scrape-webcams (get-webcams) RESTserver)
+  )
