@@ -11,11 +11,10 @@ const AWS_API_KEY = {
 };
 
 const AWS_S3_DETAILS = {
-    bucket : 'traffic-cam-images',
-//    bucket : 'traffic-cam-images/tl-405596',
+    bucket : 'traffic-cam-images-scrape-1',
 };
 
-const CSV_FILE = "/Users/antoine/molab-mysky-image-scraper/resources/webcams.csv"
+const CSV_FILE = "/Users/antoine/molab-mysky-image-scraper/resources/webcams3.csv"
 
 
 //DEPENDENCIES AND VARIABLES
@@ -133,7 +132,8 @@ var streamToS3 = function (jwt, heliosUrl, filename) {
         
         request(heliosGetRequestOptions, callback)
             .pipe(bl(function(error, data) {
-                    var s3obj = new AWS.S3({params: {Bucket: AWS_S3_DETAILS.bucket + "/" + heliosUrl.split("/")[5], Key: filename}});
+                    var s3obj = new AWS.S3({params: {Bucket: AWS_S3_DETAILS.bucket + "/" + heliosUrl.split("/")[5]
+                                                     , Key: filename}});
                     s3obj.upload({Body: data}).send();
                 }));
     });
@@ -177,11 +177,11 @@ var encodeHeliosCredentials = function () {
 async(function () {
 
     await(
-        go());
+//        go());
 
-//        new CronJob('00 30 11 * * 1-5', function() {
-//            go()
-//        }, null, true, 'Europe/London')
+        new CronJob('00 * 16,17,18,19 * * 1-5', function() {
+            go()
+        }, null, true, 'Europe/London')
     );
 
     return;
