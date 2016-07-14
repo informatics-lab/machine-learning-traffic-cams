@@ -10,11 +10,12 @@ const AWS_API_KEY = {
     secretAccessKey : process.env.AWS_SECRET_ACCESS_KEY
 };
 
-const AWS_S3_DETAILS= {
+const AWS_S3_DETAILS = {
     bucket : 'traffic-cam-images',
+//    bucket : 'traffic-cam-images/tl-405596',
 };
 
-const CSV_FILE = "/Users/tom/git/molab-mysky-image-scraper/resources/webcams1.csv";
+const CSV_FILE = "/Users/antoine/molab-mysky-image-scraper/resources/webcams.csv"
 
 
 //DEPENDENCIES AND VARIABLES
@@ -75,10 +76,10 @@ var go = function () {
 
                 readCSV(CSV_FILE)
                     .then(function (results) {
-                            var i = 0;
                             results.data.forEach(function (camera) {
-
-                                streamToS3(jwt, camera.url, i++)
+                                camera['id'] = camera.url.split("/")[5];
+                                var filename = camera.id+"_"+d.toISOString()+".jpg";
+                                streamToS3(jwt, camera.url, filename)
                                     .then(function () {
                                         console.log("IMAGE: " + camera.url + "streamed");
                                     })
@@ -112,9 +113,9 @@ var go = function () {
  * @param num
  * @returns {Promise}
  */
-var streamToS3 = function (jwt, heliosUrl, num) {
+var streamToS3 = function (jwt, heliosUrl, filename) {
     return new Promise(function(resolve, reject){
-
+        
         var heliosGetRequestOptions = {
             url: heliosUrl,
             headers: {
@@ -132,7 +133,7 @@ var streamToS3 = function (jwt, heliosUrl, num) {
         
         request(heliosGetRequestOptions, callback)
             .pipe(bl(function(error, data) {
-                    var s3obj = new AWS.S3({params: {Bucket: AWS_S3_DETAILS.bucket, Key: num+'.jpg'}});
+                    var s3obj = new AWS.S3({params: {Bucket: AWS_S3_DETAILS.bucket + "/" + heliosUrl.split("/")[5], Key: filename}});
                     s3obj.upload({Body: data}).send();
                 }));
     });
@@ -170,16 +171,18 @@ var encodeHeliosCredentials = function () {
 /**
  * Runs everything...
  */
+
+//go();
+
 async(function () {
 
-    await(go());
+    await(
+        go());
 
-//        },
-//        function(){
-//            console.log("--------------------");
-//            console.log("END");
-//        },
-//        true, 'Europe/London'));
+//        new CronJob('00 30 11 * * 1-5', function() {
+//            go()
+//        }, null, true, 'Europe/London')
+    );
 
     return;
 })();
