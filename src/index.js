@@ -5,16 +5,18 @@ const HELIOS_API_KEY = {
 };
 
 const AWS_API_KEY = {
-    region : 'eu-west-1',
+    region : process.env.REGION,
     accessKeyId : process.env.AWS_ACCESS_KEY,
     secretAccessKey : process.env.AWS_SECRET_ACCESS_KEY
 };
 
 const AWS_S3_DETAILS = {
-    bucket : 'traffic-cam-images-scrape-1',
+    bucket : process.env.BUCKET,
 };
 
-const CSV_FILE = "/Users/antoine/molab-mysky-image-scraper/resources/webcams3.csv"
+const DATAPOINT_KEY = process.env.DATAPOINT_KEY
+
+const CSV_FILE = process.env.CSV_FILE
 
 
 //DEPENDENCIES AND VARIABLES
@@ -35,8 +37,29 @@ AWS.config.update({
 });
 var s3 = new AWS.S3({apiVersion: '2006-03-01'});
 
-
-
+var datapoint = require('datapoint-js')
+    datapoint.set_key(DATAPOINT_KEY)
+    
+/**
+ * Return metadata about the streamed image
+ */
+var weatherHere = function(camId, date, lat, lon){
+    var site = datapoint.get_nearest_forecast_site(lon, lat);
+    var forecast = datapoint.get_forecast_for_site(site.id, "3hourly");
+    var now = forecast.days[0].timesteps[0];
+    
+    var metadata = {
+        "cameraId" : camId,
+        "scrapeTime" : date.toISOString(),
+        "info" : {
+            "site" : site.name,
+            "weather" : now.weather.text,
+            "temperature" : now.temperature.value+"°"+now.temperature.units
+        } 
+    }
+        
+    return metadata;
+}
 
 /**
  * Reads in the csv file
@@ -57,11 +80,8 @@ var readCSV = function (csvFile) {
     })
 };
 
-/*
+/**
  *MAIN FUNCTION
- *THE GO FUNCTION CALLS GETTOKEN
- *THEN WITH THE TOKEN IT CALLS THE GETAUTHORISEDCALL FOR EACH URLS OF THE CSV FILE
- *ALL THE IMAGES ARE IN THE FOLDER IMAGES
  */
 var go = function () {
 
@@ -78,13 +98,23 @@ var go = function () {
                             results.data.forEach(function (camera) {
                                 camera['id'] = camera.url.split("/")[5];
                                 var filename = camera.id+"_"+d.toISOString()+".jpg";
+                                
                                 streamToS3(jwt, camera.url, filename)
                                     .then(function () {
                                         console.log("IMAGE: " + camera.url + "streamed");
+                                        console.log(weatherHere(camera.id, d, camera.lat, camera.lon));
                                     })
                                     .catch(function (err) {
-                                        console.error("Error : " + camera.url);
+                                        console.error("Error: " + camera.url);
                                     });
+                                
+                                updateToDB(jwt, camera.url, camera.id, d, camera.lat, camera.lon)
+                                    .then(function(){
+                                        console.log("Metadata: " + weatherHere(camera.id, d, camera.lat, camera.lon) + " updated");
+                                    })
+                                    .catch(function(err){
+                                        console.error("Error: " + weatherHere(camera.id, d, camera.lat, camera.lon));
+                                    })
 
                             });
                             resolve();
@@ -132,10 +162,72 @@ var streamToS3 = function (jwt, heliosUrl, filename) {
         
         request(heliosGetRequestOptions, callback)
             .pipe(bl(function(error, data) {
-                    var s3obj = new AWS.S3({params: {Bucket: AWS_S3_DETAILS.bucket + "/" + heliosUrl.split("/")[5]
+                    var s3obj = new AWS.S3({params: {Bucket: AWS_S3_DETAILS.bucket 
+//                                                     + "/" + heliosUrl.split("/")[5]
                                                      , Key: filename}});
                     s3obj.upload({Body: data}).send();
                 }));
+    });
+};
+
+/**
+ * streams item from source to DynamoDB table
+ *
+ * @param jwt
+ * @param heliosUrl
+ * @param camId
+ * @param d
+ * @param lat
+ * @param lon
+ * @returns {Promise}
+ */
+var updateToDB = function (jwt, heliosUrl, camId, d, lat, lon) {
+    return new Promise(function(resolve, reject){
+        
+        var heliosGetRequestOptions = {
+            url: heliosUrl,
+            headers: {
+                'Authorization': 'Bearer ' + jwt
+            }
+        };
+        
+        var callback = function(error, response, body) {
+            if(!error) {
+                resolve();
+            } else {
+                reject(error);
+            }
+        };
+        
+        var params = {
+            TableName : process.env.TABLE,
+            Item : {
+                "cameraId" : camId,
+                "scrapeTime" : d.toISOString(),
+                "info" : {
+                    "site" : weatherHere(camId, d, lat, lon).info.site,
+                    "weather" : weatherHere(camId, d, lat, lon).info.weather,
+                    "temperature" : weatherHere(camId, d, lat, lon).info.temperature
+                }
+            }
+        };
+        
+        var docClient = new AWS.DynamoDB.DocumentClient();
+        
+        console.log("Importing metadata into DynamoDB. Please wait.");
+        
+        request(heliosGetRequestOptions, callback)
+            .pipe(bl(function(error, data) {
+                console.log("Reach this point");
+                docClient.put(params, function(err, data) {
+                    if (err) {
+                        console.error("Unable to add " + heliosUrl + ". Error JSON:" + JSON.stringify(err, null, 2));
+                    } else {
+                        console.log("PutItem succeeded:" + heliosUrl);
+                    }
+                });
+        
+            }));
     });
 };
 
@@ -171,18 +263,15 @@ var encodeHeliosCredentials = function () {
 /**
  * Runs everything...
  */
-
-//go();
-
 async(function () {
 
     await(
-//        go());
+        go());
 
-        new CronJob('00 * 16,17,18,19 * * 1-5', function() {
-            go()
-        }, null, true, 'Europe/London')
-    );
+//        new CronJob('00 00 9-17 * * *', function() {
+//            go()
+//        }, null, true, 'Europe/London')
+//    );
 
     return;
 })();
