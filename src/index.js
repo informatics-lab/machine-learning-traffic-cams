@@ -204,11 +204,9 @@ var updateToDB = function (jwt, heliosUrl, camId, d, lat, lon) {
             Item : {
                 "cameraId" : camId,
                 "scrapeTime" : d.toISOString(),
-                "info" : {
-                    "site" : weatherHere(camId, d, lat, lon).info.site,
-                    "weather" : weatherHere(camId, d, lat, lon).info.weather,
-                    "temperature" : weatherHere(camId, d, lat, lon).info.temperature
-                }
+                "site" : weatherHere(camId, d, lat, lon).info.site,
+                "weather" : weatherHere(camId, d, lat, lon).info.weather,
+                "temperature" : weatherHere(camId, d, lat, lon).info.temperature
             }
         };
         
