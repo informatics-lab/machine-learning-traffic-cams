@@ -10,8 +10,8 @@ You need to install some libraries:
 ```Bash
 $ npm install xmlhttprequest
 $ npm install btoa
-$ npm install asyncawait/async
-$ npm install asyncawait/await
+$ npm install datapoint-js
+$ npm install asyncawait
 $ npm install request
 $ npm install babyparse
 $ npm install cron
