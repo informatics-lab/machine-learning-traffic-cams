@@ -10,6 +10,6 @@ pom.xml.asc
 .hgignore
 .hg/
 credentials.sh
-.gitignore
 .idea
+.ipynb_checkpoints
 node_modules
