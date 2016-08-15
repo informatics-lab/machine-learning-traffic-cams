@@ -19,7 +19,26 @@ __Disclaimer: Note that the following environmental variables need to be set up:
 
 So you need account on all of those platforms.
 
-Personally, I put all those keys in a file with other recurring data: [credentials.sh](https://github.com/met-office-lab/machine-learning-traffic-cams/blob/master/credentials.sh). Obviously you have to fill this file with your own keys.
+Personally, I put all those keys in a file with other recurring data: __credentials.sh__:
+
+```Bash
+$ #!/usr/bin/env bash
+
+$ export HELIOS_API_ID =
+$ export HELIOS_API_SECRET =
+
+$ export DATAPOINT_KEY =
+
+$ export REGION =
+$ export AWS_ACCESS_KEY =
+$ export AWS_SECRET_ACCESS_KEY =
+$ export BUCKET =
+$ export TABLE =
+
+$ export CSV_FILE =
+```
+
+Obviously you have to fill this file with your own keys.
 
 Don't forget to run it before running the main code ([src/index.js](https://github.com/met-office-lab/machine-learning-traffic-cams/blob/master/src/index.js)):
 
