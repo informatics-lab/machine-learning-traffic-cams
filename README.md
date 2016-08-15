@@ -1,15 +1,15 @@
 # Scraping Images from traffic cam URL to do ML.
 
-A [Node.js](https://nodejs.org/en/) [script](https://github.com/met-office-lab/machine-learning-traffic-cams/blob/master/src/index.js) to scrape traffic cam images from [Exelis’ Helios Weather Platform](https://helios.earth/explore/login)'s open data API and stream it on an [AWS S3](https://aws.amazon.com/fr/documentation/s3/) bucket.
+__A [Node.js](https://nodejs.org/en/) _[script](https://github.com/met-office-lab/machine-learning-traffic-cams/blob/master/src/index.js)_ to scrape traffic cam images from [Exelis’ Helios Weather Platform](https://helios.earth/explore/login)'s open data API and stream it on an [AWS S3](https://aws.amazon.com/fr/documentation/s3/) bucket.__
 
-Weather forecast are linked to each images using [datapoint-js](https://github.com/jacobtomlinson/datapoint-js) and pipe to a [DynamoDB](https://aws.amazon.com/fr/documentation/dynamodb/) table.
+__Weather forecast are linked to each image using [datapoint-js](https://github.com/jacobtomlinson/datapoint-js) and pipe to a [DynamoDB](https://aws.amazon.com/fr/documentation/dynamodb/) table.__
 
-To process the images and to do some machine learning, I use [TensorFlow](https://www.tensorflow.org/versions/r0.10/get_started/os_setup.html) and the [jupyter notebook](http://jupyter.org/).
-Have a look at the [CADL](https://github.com/pkmital/CADL) project! I found it very helpful to begin with ML in python.
+__To process the images and to do some machine learning, I use [TensorFlow](https://www.tensorflow.org/versions/r0.10/get_started/os_setup.html) and the [jupyter notebook](http://jupyter.org/).
+Have a look at the [CADL](https://github.com/pkmital/CADL) project! I found it very helpful to begin with ML in python.__
 
 # Keys
 
-__Disclaimer: Note that environmental variables need to be set up:__
+__Disclaimer: Note that the following environmental variables need to be set up:__
 
 [AWS API key](http://docs.aws.amazon.com/ses/latest/DeveloperGuide/get-aws-keys.html)
 
@@ -19,7 +19,9 @@ __Disclaimer: Note that environmental variables need to be set up:__
 
 So you need account on all of those platforms.
 
-Personally, I put all those keys in a file with other recurring data: [credentials.sh](https://github.com/met-office-lab/machine-learning-traffic-cams/blob/master/credentials.sh). Obviously you have to fill the file with your own keys. Don't forget to run it before running the main code ([src/index.js](https://github.com/met-office-lab/machine-learning-traffic-cams/blob/master/src/index.js)):
+Personally, I put all those keys in a file with other recurring data: [credentials.sh](https://github.com/met-office-lab/machine-learning-traffic-cams/blob/master/credentials.sh). Obviously you have to fill this file with your own keys.
+
+Don't forget to run it before running the main code ([src/index.js](https://github.com/met-office-lab/machine-learning-traffic-cams/blob/master/src/index.js)):
 
 ```Bash
 $ . ./credentials.sh
@@ -43,7 +45,9 @@ For more information, it's [here](https://docs.npmjs.com/getting-started/using-a
 
 To do my way, complete the entire [credentials.sh](https://github.com/met-office-lab/machine-learning-traffic-cams/blob/master/credentials.sh) file: the region of your present AWS server, the name of an S3 bucket, the name of a DynamoDB table, the name of your present working csv file.
 
-__ATTENTION: Scraping can take a very long time with a to big csv file. You might want to split it. That way, be aware to save the new file as a csv in the [resources](https://github.com/met-office-lab/machine-learning-traffic-cams/tree/master/resources) folder.__
+__ATTENTION:__
+
+__Scraping on your own machine can take a very long time with a to big csv file. You might want to split it. That way, be aware to save the new file as a csv in the [resources](https://github.com/met-office-lab/machine-learning-traffic-cams/tree/master/resources) folder.__
 
 ## AWS
 
