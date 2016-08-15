@@ -62,7 +62,9 @@ For more information, it's [here](https://docs.npmjs.com/getting-started/using-a
 
 ## credentials.sh
 
-To do my way, complete the entire [credentials.sh](https://github.com/met-office-lab/machine-learning-traffic-cams/blob/master/credentials.sh) file: the region of your present AWS server, the name of an S3 bucket, the name of a DynamoDB table, the name of your present working csv file.
+To do my way, create and complete the entire __credentials.sh__ file: the region of your present AWS server, the name of an S3 bucket, the name of a DynamoDB table, the name of your present working csv file.
+
+Again, don't forget to run it.
 
 __ATTENTION:__
 
