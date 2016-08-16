@@ -69,7 +69,7 @@ To do my way, create and complete the entire _credentials.sh_ file:
  - The name of the DynamoDB table you want all the weather data to be put
  - The name of your present working csv file
 
-There are two csv file: _webcams.csv_ and _webcams1.csv_.
+There are two csv file: _[webcams.csv](https://github.com/met-office-lab/machine-learning-traffic-cams/blob/antoine/resources/webcams.csv)_ and _[webcams1.csv](https://github.com/met-office-lab/machine-learning-traffic-cams/blob/antoine/resources/webcams1.csv)_.
 
 The first one contain the URLs, the latitudes and the longitudes for every traffic cameras.
 
