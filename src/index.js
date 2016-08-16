@@ -102,7 +102,6 @@ var go = function () {
                                 streamToS3(jwt, camera.url, filename)
                                     .then(function () {
                                         console.log("IMAGE: " + camera.url + "streamed");
-                                        console.log(weatherHere(camera.id, d, camera.lat, camera.lon));
                                     })
                                     .catch(function (err) {
                                         console.error("Error: " + camera.url);
@@ -110,7 +109,7 @@ var go = function () {
                                 
                                 updateToDB(jwt, camera.url, camera.id, d, camera.lat, camera.lon)
                                     .then(function(){
-                                        console.log("Metadata: " + weatherHere(camera.id, d, camera.lat, camera.lon) + " updated");
+                                        console.log("Metadata of the image: " + filename + " updated");
                                     })
                                     .catch(function(err){
                                         console.error("Error: " + weatherHere(camera.id, d, camera.lat, camera.lon));
@@ -162,7 +161,11 @@ var streamToS3 = function (jwt, heliosUrl, filename) {
         
         request(heliosGetRequestOptions, callback)
             .pipe(bl(function(error, data) {
-                    var s3obj = new AWS.S3({params: {Bucket: AWS_S3_DETAILS.bucket 
+                    var s3obj = new AWS.S3({params: {Bucket: AWS_S3_DETAILS.bucket
+/**
+* If you uncomment the line 169, the images will be store on S3 by camera, on specific folder.
+*/
+                                                     
 //                                                     + "/" + heliosUrl.split("/")[5]
                                                      , Key: filename}});
                     s3obj.upload({Body: data}).send();
@@ -216,7 +219,6 @@ var updateToDB = function (jwt, heliosUrl, camId, d, lat, lon) {
         
         request(heliosGetRequestOptions, callback)
             .pipe(bl(function(error, data) {
-                console.log("Reach this point");
                 docClient.put(params, function(err, data) {
                     if (err) {
                         console.error("Unable to add " + heliosUrl + ". Error JSON:" + JSON.stringify(err, null, 2));
@@ -262,14 +264,12 @@ var encodeHeliosCredentials = function () {
  * Runs everything...
  */
 async(function () {
-
     await(
         go());
 
-//        new CronJob('00 00 9-17 * * *', function() {
+//        new CronJob('* * * * * *', function() {
 //            go()
 //        }, null, true, 'Europe/London')
 //    );
 
-    return;
 })();
