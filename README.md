@@ -20,7 +20,7 @@ __Disclaimer: Note that the following environmental variables need to be set up:
 
 So you need account on all of those platforms.
 
-Personally, I put all those keys in a __credentials.sh__ file with other recurring data: 
+Personally, I put all those keys in a _credentials.sh_ file with other recurring data: 
 
 ```Bash
 $ #!/usr/bin/env bash
@@ -41,7 +41,7 @@ $ export CSV_FILE =
 
 Obviously you have to fill this file with your own keys.
 
-Don't forget to run it before running the main code ([src/index.js](https://github.com/met-office-lab/machine-learning-traffic-cams/blob/master/src/index.js)):
+Don't forget to run it before running the main code (_[src/index.js](https://github.com/met-office-lab/machine-learning-traffic-cams/blob/master/src/index.js)_):
 
 ```Bash
 $ . ./credentials.sh
@@ -93,7 +93,7 @@ The name of the images in S3 follows this pattern: cameraId_scrapeTime.jpg.
 
 ## index.js
 
-If you want to set up a [cron job](https://en.wikipedia.org/wiki/Cron), uncomment the lines 270 to 273 (and comment the line 268). See [Documentation](https://github.com/ncb000gt/node-cron) for time settings:
+If you want to set up a [cron job](https://en.wikipedia.org/wiki/Cron), uncomment the lines 270 to 273 (and comment the line 268). See [documentation](https://github.com/ncb000gt/node-cron) for time settings:
 
 ```JavaScript
 //        go());
@@ -106,7 +106,7 @@ If you want to set up a [cron job](https://en.wikipedia.org/wiki/Cron), uncommen
 
 # How to run index.js
 
-It's using Node.js. So to run it from the main directory, write this command:
+It's using _Node.js_. So to run it from the main directory, write this command:
 
 ```Bash
 node src/index.js
@@ -131,7 +131,7 @@ You can use a command line tool called [kappa](https://github.com/garnaat/kappa)
 
 ## Get data from AWS
 
-The [get_data.ipynb](https://github.com/met-office-lab/machine-learning-traffic-cams/blob/antoine/resources/get_data.ipynb) file let you check the data you've stored on AWS.
+The *[get_data.ipynb](https://github.com/met-office-lab/machine-learning-traffic-cams/blob/antoine/resources/get_data.ipynb)* file let you check the data you've stored on AWS.
 
 It's using [boto3](http://boto3.readthedocs.io/en/latest/).
 
@@ -139,8 +139,8 @@ Choose an existing _cameraId_ and an existing _scrapeTime_ of your DB. The image
 
 ## Scrape the URLs
 
-As you've probably noticed, to scrape the traffic cam images, I had to scrape the traffic cam URLs to create the [webcams.csv](https://github.com/met-office-lab/machine-learning-traffic-cams/tree/master/resources/webcams.csv) file.
+As you've probably noticed, to scrape the traffic cam images, I had to scrape the traffic cam URLs to create the _[webcams.csv](https://github.com/met-office-lab/machine-learning-traffic-cams/tree/master/resources/webcams.csv)_ file.
 
-To do so, have look at the _[src/scrapingURL](https://github.com/met-office-lab/machine-learning-traffic-cams/tree/antoine/src)_ folder.
+To do so, have look at the [src/scrapingURL](https://github.com/met-office-lab/machine-learning-traffic-cams/tree/antoine/src) folder.
 
-Keys need to be set up in the [.js file](https://github.com/met-office-lab/machine-learning-traffic-cams/blob/antoine/src/scarpingURL/js/scrapingURL.js). You can run the [.html file](https://github.com/met-office-lab/machine-learning-traffic-cams/blob/antoine/src/scarpingURL/html/scrapingURL.html) in your browser (I use Firefox). You will see an empty cell aking you " __Go?__ ". Wait the scrape to be over and type " __YES__ " to download the csv file. It would be download with a random name.
+Keys need to be set up in the _[.js file](https://github.com/met-office-lab/machine-learning-traffic-cams/blob/antoine/src/scarpingURL/js/scrapingURL.js)_. You can run the _[.html file](https://github.com/met-office-lab/machine-learning-traffic-cams/blob/antoine/src/scarpingURL/html/scrapingURL.html)_ in your browser (I use Firefox). You will see an empty cell aking you " __Go?__ ". Wait the scrape to be over and type " __YES__ " to download the csv file. It would be download with a random name.
