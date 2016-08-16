@@ -4,7 +4,7 @@ __A [Node.js](https://nodejs.org/en/) _[script](https://github.com/met-office-la
 
 __Weather forecast are linked to each image using [datapoint-js](https://github.com/jacobtomlinson/datapoint-js) and pipe to a [DynamoDB](https://aws.amazon.com/fr/documentation/dynamodb/) table.__
 
-__To process the images and to do some machine learning, I use [TensorFlow](https://www.tensorflow.org/versions/r0.10/get_started/os_setup.html) and the [jupyter notebook](http://jupyter.org/).__
+__To process the images and to do some machine learning, I use [TensorFlow](https://www.tensorflow.org/versions/r0.10/get_started/os_setup.html) and the [jupyter notebook](http://jupyter.readthedocs.io/en/latest/install.html).__
 
 __Have a look at the [CADL](https://github.com/pkmital/CADL) project! I found it very helpful to begin with ML in python.__
 
@@ -93,7 +93,7 @@ The name of the images in S3 follows this pattern: cameraId_scrapeTime.jpg.
 
 ## index.js
 
-If you want to set up a [CronJob](https://en.wikipedia.org/wiki/Cron), uncomment the lines 270 to 273 (and comment the line 268). See [Documentation](https://github.com/ncb000gt/node-cron) for time settings:
+If you want to set up a [cron job](https://en.wikipedia.org/wiki/Cron), uncomment the lines 270 to 273 (and comment the line 268). See [Documentation](https://github.com/ncb000gt/node-cron) for time settings:
 
 ```JavaScript
 //        go());
@@ -114,9 +114,9 @@ node src/index.js
 
 # ML thanks to CADL
 
-The _[session-1-traffic-cams.ipynb](https://github.com/met-office-lab/machine-learning-traffic-cams/tree/master/resources/session-1-traffic-cams.ipynb)_ file is my own version (not entirely completed!) of the _[session-1.ipynb](https://github.com/pkmital/CADL/blob/master/session-1/session-1.ipynb)_ file of the [CADL](https://github.com/pkmital/CADL) project.
+The _[session-1-traffic-cams.ipynb](https://github.com/met-office-lab/machine-learning-traffic-cams/blob/antoine/resources/session-1-traffic-cams.ipynb)_ file is my own version (not entirely completed!) of the _[session-1.ipynb](https://github.com/pkmital/CADL/blob/master/session-1/session-1.ipynb)_ file of the [CADL](https://github.com/pkmital/CADL) project.
 
-For this ML tutorial, you will need a set of 100 traffic cam images. A dataset of images is already prepared in the [resources/Images](https://github.com/met-office-lab/machine-learning-traffic-cams/tree/master/resources/Images) folder.
+For this ML tutorial, you will need a set of 100 traffic cam images. A dataset of images is already prepared in the [resources/Images](https://github.com/met-office-lab/machine-learning-traffic-cams/tree/antoine/resources/Images) folder.
 
 The other sessions of the CADL project are the next step of this ML project.
 
@@ -141,6 +141,6 @@ Choose an existing _cameraId_ and an existing _scrapeTime_ of your DB. The image
 
 As you've probably noticed, to scrape the traffic cam images, I had to scrape the traffic cam URLs to create the [webcams.csv](https://github.com/met-office-lab/machine-learning-traffic-cams/tree/master/resources/webcams.csv) file.
 
-To do so, have look at the _[src/scrapingURL](https://github.com/met-office-lab/machine-learning-traffic-cams/tree/master/src/scrapingURL)_ folder.
+To do so, have look at the _[src/scrapingURL](https://github.com/met-office-lab/machine-learning-traffic-cams/tree/antoine/src)_ folder.
 
 Keys need to be set up in the [.js file](https://github.com/met-office-lab/machine-learning-traffic-cams/blob/antoine/src/scarpingURL/js/scrapingURL.js). You can run the [.html file](https://github.com/met-office-lab/machine-learning-traffic-cams/blob/antoine/src/scarpingURL/html/scrapingURL.html) in your browser (I use Firefox). You will see an empty cell aking you " __Go?__ ". Wait the scrape to be over and type " __YES__ " to download the csv file. It would be download with a random name.
