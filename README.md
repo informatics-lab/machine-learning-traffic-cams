@@ -1,4 +1,4 @@
-# Scraping Images from traffic cam URL to do ML.
+# Scraping Images from traffic cam URLs to do ML.
 
 __A [Node.js](https://nodejs.org/en/) _[script](https://github.com/met-office-lab/machine-learning-traffic-cams/blob/master/src/index.js)_ to scrape traffic cam images from [Exelis’ Helios Weather Platform](https://helios.earth/explore/login)'s open data API and stream it to an [AWS S3](https://aws.amazon.com/fr/documentation/s3/) bucket.__
 
@@ -126,6 +126,8 @@ The other sessions of the CADL project are the next step of this ML project.
 
 You can avoid to use your own machine for the CronJob by using [AWS Lambda](http://docs.aws.amazon.com/lambda/latest/dg/welcome.html) service.
 It would fix the problem of size of the csv file and allowed you to scrape anytime, anywhere.
+
+You can use a command line tool called [kappa](https://github.com/garnaat/kappa). Deploy, update, and test your Lambda functions should be easier.
 
 ## Get data from AWS
 
