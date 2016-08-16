@@ -131,7 +131,7 @@ You can use a command line tool called [kappa](https://github.com/garnaat/kappa)
 
 ## Get data from AWS
 
-The _[get_data.ipynb](https://github.com/met-office-lab/machine-learning-traffic-cams/tree/master/resources/get_data.ipynb)_ file let you check the data you've stored on AWS.
+The [get_data.ipynb](https://github.com/met-office-lab/machine-learning-traffic-cams/blob/antoine/resources/get_data.ipynb) file let you check the data you've stored on AWS.
 
 It's using [boto3](http://boto3.readthedocs.io/en/latest/).
 
