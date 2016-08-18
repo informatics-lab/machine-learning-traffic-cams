@@ -25,18 +25,18 @@ Personally, I put all those keys in a _credentials.sh_ file with other recurring
 ```Bash
 $ #!/usr/bin/env bash
 
-$ export HELIOS_API_ID =
-$ export HELIOS_API_SECRET =
+export HELIOS_API_ID =
+export HELIOS_API_SECRET =
 
-$ export DATAPOINT_KEY =
+export DATAPOINT_KEY =
 
-$ export REGION =
-$ export AWS_ACCESS_KEY =
-$ export AWS_SECRET_ACCESS_KEY =
-$ export BUCKET =
-$ export TABLE =
+export REGION =
+export AWS_ACCESS_KEY =
+export AWS_SECRET_ACCESS_KEY =
+export BUCKET =
+export TABLE =
 
-$ export CSV_FILE =
+export CSV_FILE =
 ```
 
 Obviously you have to fill this file with your own keys.
