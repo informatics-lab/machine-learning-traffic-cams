@@ -1,3 +1,4 @@
+
 //CONSTANTS
 const HELIOS_API_KEY = {
     id: process.env.HELIOS_API_ID,
@@ -5,13 +6,13 @@ const HELIOS_API_KEY = {
 };
 
 const AWS_API_KEY = {
-    region : process.env.REGION,
-    accessKeyId : process.env.AWS_ACCESS_KEY,
-    secretAccessKey : process.env.AWS_SECRET_ACCESS_KEY
+    region: process.env.REGION,
+    accessKeyId: process.env.AWS_ACCESS_KEY,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
 };
 
 const AWS_S3_DETAILS = {
-    bucket : process.env.BUCKET,
+    bucket: process.env.BUCKET,
 };
 
 const DATAPOINT_KEY = process.env.DATAPOINT_KEY
@@ -38,26 +39,30 @@ AWS.config.update({
 var s3 = new AWS.S3({apiVersion: '2006-03-01'});
 
 var datapoint = require('datapoint-js')
-    datapoint.set_key(DATAPOINT_KEY)
-    
+datapoint.set_key(DATAPOINT_KEY)
+
 /**
  * Return metadata about the streamed image
  */
-var weatherHere = function(camId, date, lat, lon){
+var weatherHere = function(camId, date, lat, lon) {
     var site = datapoint.get_nearest_forecast_site(lon, lat);
+    
+
     var forecast = datapoint.get_forecast_for_site(site.id, "3hourly");
     var now = forecast.days[0].timesteps[0];
-    
+
     var metadata = {
-        "cameraId" : camId,
-        "scrapeTime" : date.toISOString(),
-        "info" : {
-            "site" : site.name,
-            "weather" : now.weather.text,
-            "temperature" : now.temperature.value+"°"+now.temperature.units
-        } 
+        "cameraId": camId,
+        "scrapeTime": date.toISOString(),
+        "info": {
+            "site": site.name,
+            "weather": now.weather.text,
+            "temperature": now.temperature.value + "°" + now.temperature.units
+        }
     }
-        
+
+    
+
     return metadata;
 }
 
@@ -65,71 +70,143 @@ var weatherHere = function(camId, date, lat, lon){
  * Reads in the csv file
  * @returns {Promise} containing each line of the csv as iterable list
  */
-var readCSV = function (csvFile) {
-    return new Promise(function (resolve, reject) {
-        Baby.parseFiles(csvFile, {
-            header: true,                       //ignore the first line (labels)
-            complete: function (results) {
-                console.log("Read csv file : "+csvFile);
-                resolve(results);
-            },
-            error: function (error, file) {
-                reject(error);
-            }
-        });
-    })
+var readCSV = function(csvFile) {
+    return Baby.parseFiles(csvFile, {
+        header: true, //ignore the first line (labels)
+        complete: function(results) {
+            console.log("Read csv file : " + csvFile);
+        },
+        error: function(error, file) {
+            console.log("Error reading " + csvFile)
+            console.log("Error: "+ error)
+        }
+    });
 };
 
 /**
  *MAIN FUNCTION
  */
-var go = function () {
+var go = function() {
 
     var d = new Date();
     console.log('Running at ' + d.toISOString());
 
-    return new Promise(function (resolve, reject) {
 
-        getHeliosToken()
-            .then(function (jwt) {
 
-                readCSV(CSV_FILE)
-                    .then(function (results) {
-                            results.data.forEach(function (camera) {
-                                camera['id'] = camera.url.split("/")[5];
-                                var filename = camera.id+"_"+d.toISOString()+".jpg";
-                                
-                                streamToS3(jwt, camera.url, filename)
-                                    .then(function () {
-                                        console.log("IMAGE: " + camera.url + "streamed");
-                                    })
-                                    .catch(function (err) {
-                                        console.error("Error: " + camera.url);
-                                    });
-                                
-                                updateToDB(jwt, camera.url, camera.id, d, camera.lat, camera.lon)
-                                    .then(function(){
-                                        console.log("Metadata of the image: " + filename + " updated");
-                                    })
-                                    .catch(function(err){
-                                        console.error("Error: " + weatherHere(camera.id, d, camera.lat, camera.lon));
-                                    })
+    var array = readCSV(CSV_FILE).data;
+    var temparray, chunk = 50;
+    var i=0;
+    var j = array.length;
+    
+    var Q = require('q');
 
-                            });
-                            resolve();
+    // `condition` is a function that returns a boolean
+    // `body` is a function that returns a promise
+    // returns a promise for the completion of the loop
+    function promiseWhile(condition, body) {
+        var done = Q.defer();
+
+        function loop() {
+            // When the result of calling `condition` is no longer true, we are
+            // done.
+            if (!condition()) return done.resolve();
+            // Use `when`, in case `body` does not return a promise.
+            // When it completes loop again otherwise, if it fails, reject the
+            // done promise
+            Q.when(body(), loop, done.reject);
+        }
+
+        // Start running the loop in the next tick so that this function is
+        // completely async. It would be unexpected if `body` was called
+        // synchronously the first time.
+        Q.nextTick(loop);
+
+        // The promise
+        return done.promise;
+    }
+
+    
+    
+    getHeliosToken()
+    .then(function(jwt) {
+        promiseWhile(function () { return i <= j; }, function () {
+            temparray = array.slice(i, i + chunk);
+            
+            temparray.forEach(function(camera) {
+                camera['id'] = camera.url.split("/")[5];
+                var filename = camera.id + "_" + d.toISOString() + ".jpg";
+
+                streamToS3(jwt, camera.url, filename)
+                    .then(function() {
+                        console.log("IMAGE: " + camera.url + "streamed");
+                        console.log(weatherHere(camera.id, d, camera.lat, camera.lon));
                     })
                     .catch(function(err) {
-                        console.error("Error reading in csv file :" + CSV_FILE);
-                        console.error(err);
-                        reject();
+                        console.log("Error in streamToS3");
+                        console.error("Error: " + camera.url);
                     });
 
+                updateToDB(jwt, camera.url, camera.id, d, camera.lat, camera.lon)
+                    .then(function() {
+                        console.log("Metadata: " + weatherHere(camera.id, d, camera.lat, camera.lon) + " updated");
+                    })
+                    .catch(function(err) {
+                        console.log("Error in updateToDB");
+                        console.log("Camera"+camera.url);
+                        console.error("Error: " + weatherHere(camera.id, d, camera.lat, camera.lon));
+                        console.log(err);
+                    })
+
+            });
+            
+            i = i+chunk;
+            return i;
+        }).then(function () {
+            console.log("done");
+        }).done();
+    })
+    .catch(function(err) {
+        console.error("Error getting helios jwt token", err);
+        reject();
+    });
+
+    /*
+    for (i = 0, j = array.length; i < j; i += chunk) {
+        getHeliosToken()
+            .then(function(jwt) {
+                temparray = array.slice(i, i + chunk);
+                new Promise(function(resolve, reject) {
+                    temparray.forEach(function(camera) {
+                        camera['id'] = camera.url.split("/")[5];
+                        var filename = camera.id + "_" + d.toISOString() + ".jpg";
+
+                        streamToS3(jwt, camera.url, filename)
+                            .then(function() {
+                                console.log("IMAGE: " + camera.url + "streamed");
+                                console.log(weatherHere(camera.id, d, camera.lat, camera.lon));
+                            })
+                            .catch(function(err) {
+                                console.error("Error: " + camera.url);
+                            });
+
+                        updateToDB(jwt, camera.url, camera.id, d, camera.lat, camera.lon)
+                            .then(function() {
+                                console.log("Metadata: " + weatherHere(camera.id, d, camera.lat, camera.lon) + " updated");
+                            })
+                            .catch(function(err) {
+                                console.error("Error: " + weatherHere(camera.id, d, camera.lat, camera.lon));
+                            })
+
+                    });
+                    resolve();
+                });
             })
-            .catch(function (err) {
-                console.error("Error getting helios jwt token");
+            .catch(function(err) {
+                console.error("Error getting helios jwt token", err);
                 reject();
             });
-    });
+    }*/
+
 };
 
 /**
@@ -141,9 +218,9 @@ var go = function () {
  * @param num
  * @returns {Promise}
  */
-var streamToS3 = function (jwt, heliosUrl, filename) {
-    return new Promise(function(resolve, reject){
-        
+var streamToS3 = function(jwt, heliosUrl, filename) {
+    return new Promise(function(resolve, reject) {
+
         var heliosGetRequestOptions = {
             url: heliosUrl,
             headers: {
@@ -152,24 +229,23 @@ var streamToS3 = function (jwt, heliosUrl, filename) {
         };
 
         var callback = function(error, response, body) {
-            if(!error) {
+            if (!error) {
                 resolve();
             } else {
                 reject(error);
             }
         };
-        
+
         request(heliosGetRequestOptions, callback)
             .pipe(bl(function(error, data) {
-                    var s3obj = new AWS.S3({params: {Bucket: AWS_S3_DETAILS.bucket
+                var s3obj = new AWS.S3({params: {Bucket: AWS_S3_DETAILS.bucket
 /**
 * If you uncomment the line 169, the images will be store on S3 by camera, on specific folder.
 */
-                                                     
-//                                                     + "/" + heliosUrl.split("/")[5]
-                                                     , Key: filename}});
-                    s3obj.upload({Body: data}).send();
-                }));
+                            //                                                     + "/" + heliosUrl.split("/")[5]
+                            , Key: filename}});
+                s3obj.upload({Body: data}).send();
+            }));
     });
 };
 
@@ -184,50 +260,50 @@ var streamToS3 = function (jwt, heliosUrl, filename) {
  * @param lon
  * @returns {Promise}
  */
-var updateToDB = function (jwt, heliosUrl, camId, d, lat, lon) {
-    return new Promise(function(resolve, reject){
-        
+var updateToDB = function(jwt, heliosUrl, camId, d, lat, lon) {
+    return new Promise(function(resolve, reject) {
+
         var heliosGetRequestOptions = {
             url: heliosUrl,
             headers: {
                 'Authorization': 'Bearer ' + jwt
             }
         };
-        
+
         var callback = function(error, response, body) {
-            if(!error) {
+            if (!error) {
                 resolve();
             } else {
                 reject(error);
             }
         };
-        
+
         var params = {
-            TableName : process.env.TABLE,
-            Item : {
-                "cameraId" : camId,
-                "scrapeTime" : d.toISOString(),
-                "site" : weatherHere(camId, d, lat, lon).info.site,
-                "weather" : weatherHere(camId, d, lat, lon).info.weather,
-                "temperature" : weatherHere(camId, d, lat, lon).info.temperature
+            TableName: process.env.TABLE,
+            Item: {
+                "cameraId": camId,
+                "scrapeTime": d.toISOString(),
+                "site": weatherHere(camId, d, lat, lon).info.site,
+                "weather": weatherHere(camId, d, lat, lon).info.weather,
+                "temperature": weatherHere(camId, d, lat, lon).info.temperature
             }
         };
-        
+
         var docClient = new AWS.DynamoDB.DocumentClient();
-        
-        console.log("Importing metadata into DynamoDB. Please wait.");
-        
-        request(heliosGetRequestOptions, callback)
-            .pipe(bl(function(error, data) {
-                docClient.put(params, function(err, data) {
-                    if (err) {
-                        console.error("Unable to add " + heliosUrl + ". Error JSON:" + JSON.stringify(err, null, 2));
-                    } else {
-                        console.log("PutItem succeeded:" + heliosUrl);
-                    }
-                });
-        
-            }));
+
+        if(params){
+            request(heliosGetRequestOptions, callback)
+                .pipe(bl(function(error, data) {
+                    docClient.put(params, function(err, data) {
+                        if (err) {
+                            console.error("Unable to add " + heliosUrl + ". Error JSON:" + JSON.stringify(err, null, 2));
+                        } else {
+                            console.log("PutItem succeeded:" + heliosUrl);
+                        }
+                    });
+
+                }));
+        }
     });
 };
 
@@ -235,13 +311,17 @@ var updateToDB = function (jwt, heliosUrl, camId, d, lat, lon) {
  * gets the jwt access token from helios.
  * @returns {Promise} resolved content is the jwt
  */
-var getHeliosToken = function () {
-    return new Promise(function (resolve, reject) {
-        var xhr = new XMLHttpRequest();
-        xhr.addEventListener('load', function (evt) {
+var getHeliosToken = function() {
+    return new Promise(function(resolve, reject) {
+var xhr = new XMLHttpRequest();
+        xhr.addEventListener('load', function(evt) {
             var jwt = JSON.parse(this.responseText).access_token;
             console.log("got access token: " + jwt);
             resolve(jwt);
+        });
+
+        xhr.addEventListener('error', function(evt) {
+            reject(evt)
         });
 
         xhr.open('POST', 'https://api.exelishelios.com/v1/oauth/token', true);
@@ -256,20 +336,21 @@ var getHeliosToken = function () {
  * encodes the helios credentials
  * @returns {*} encoded credentials
  */
-var encodeHeliosCredentials = function () {
+var encodeHeliosCredentials = function() {
     return btoa(HELIOS_API_KEY.id + ":" + HELIOS_API_KEY.secret);
 };
 
 /**
  * Runs everything...
  */
-async(function () {
-    await(
-        go());
+async(function() {
+    go()
+    /*
+        await(
+            new CronJob('00 00 8,11,14,17,20 * * *', function() {
+                go()
+            }, null, true, 'Europe/London')
+        );
 
-//        new CronJob('* * * * * *', function() {
-//            go()
-//        }, null, true, 'Europe/London')
-//    );
-
+        return;*/
 })();
