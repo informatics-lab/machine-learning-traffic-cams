@@ -17,6 +17,7 @@
     "datapoint-js": "^0.2.1",
     "cron": "^1.1.0",
     "request": "^2.74.0",
-    "xmlhttprequest": "^1.8.0"
+    "xmlhttprequest": "^1.8.0",
+    "q": "^1.4.1"
   }
 }
